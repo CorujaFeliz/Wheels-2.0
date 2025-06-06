@@ -42,4 +42,23 @@ public class IssueBikeUI {
             System.out.println("Cannot calculate payment: customer or hire not initialized.");
         }
     }
+    public void CadastrarCliente(Scanner sc){
+        System.out.println("Deseja cadastrar de Forma rapida? (S/N)");
+        String escolha = sc.nextLine();
+        if (escolha.equalsIgnoreCase("S")){
+            System.out.println("Digite seus dados (nome,postcode,email,telefone)");
+            String linha = sc.nextLine();
+            String[] partes = linha.split(",");
+            if (partes.length == 4) {
+                String nome = partes[0].trim();
+                String postcode = partes[1].trim();
+                String email = partes[2].trim();
+                String telefone = partes[3].trim();
+                createCustomer(nome,postcode,email,telefone);
+            }else {
+                System.out.println("Insira os dados na forma: nome,postcode,email,telefone");
+            }
+            }
+        }
+    }
 }
