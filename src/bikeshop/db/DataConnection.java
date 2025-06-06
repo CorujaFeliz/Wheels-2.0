@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class DataConnection {
 private static final String URL="jdbc:mysql://localhost:3306/bikeshop?useSSL=false&allowPublicKeyRetrieval=true";
 private static final String Usuario = "root";
-private static final String Senha = "RockPaperScissors9";
+private  static  final String Senha = System.getenv("MYSQL_PASSWORD");
 
     public static Connection getConnetion() throws SQLException{
         try{
