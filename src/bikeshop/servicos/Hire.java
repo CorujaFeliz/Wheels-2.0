@@ -1,4 +1,7 @@
-package bikeshop.model;
+package bikeshop.servicos;
+
+import bikeshop.model.Bike;
+import bikeshop.model.Customer;
 
 import java.time.LocalDate;
 

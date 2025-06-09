@@ -1,7 +1,7 @@
 package bikeshop.logic;
 
 import bikeshop.model.Customer;
-import bikeshop.model.Hire;
+import bikeshop.servicos.Hire;
 
 public class Payment {
 

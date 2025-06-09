@@ -8,13 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 public class CustomerDAO {
     public void insert(Customer customer){
-        String sql = "INSERT INTO Customer (nome,postcode,telefone) VALUES(?,?,?)";
+        String sql = "INSERT INTO Customer (nome,postcode,email,telefone) VALUES(?,?,?,?)";
         try(Connection conn= DataConnection.getConnetion();
          PreparedStatement stmt = conn.prepareStatement(sql)){
 
             stmt.setString(1,customer.getNome());
             stmt.setString(2,customer.getPostcode());
-            stmt.setInt(3,customer.getTelefone());
+            stmt.setString(3,customer.getEmail());
+            stmt.setString(4,customer.getTelefone());
 
             stmt.executeUpdate();
             System.out.println("Client inserido com sucesso");
@@ -34,7 +35,8 @@ public class CustomerDAO {
                         rs.getInt("id"),
                         rs.getString("nome"),
                         rs.getString("postcode"),
-                        rs.getInt("telefone"));
+                        rs.getString("email"),
+                        rs.getString("telefone"));
                 customers.add(customer);
 
             }
