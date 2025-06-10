@@ -46,4 +46,28 @@ public class CustomerDAO {
         return customers;
     }
 
+    public Customer login(String email, String senha){
+        String sql= "SELECT * FROM customers WHERE email = ?";
+        try (Connection conn = DataConnection.getConnetion();
+        PreparedStatement stmt = conn.prepareStatement(sql)){
+        stmt.setString(1,email);
+        ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()){
+            String senhaHash = rs.getString("senha");
+            boolean emailVerificado = rs.getBoolean("emailVerificado");
+                if (senha.equals(senhaHash)){
+                    if(!emailVerificado){
+                        System.out.println("Email ainda não verificado.");
+                        return null;
+                    }
+                    return new Customer(rs.getString("nome")
+                    ,rs.getString("postcode"),email, rs.getString("telefone"),senhaHash,true);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+return null;
+}
 }
