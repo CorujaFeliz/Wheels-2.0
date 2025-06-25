@@ -1,17 +1,42 @@
 package bikeshop;
 
-import java.util.Scanner;
 import bikeshop.ui.IssueBikeUI;
+import bikeshop.dao.AppDAO;
+import bikeshop.logic.security.SegurancaCripto;
+import bikeshop.servicos.Email;
+import bikeshop.controller.AppController;
+import com.google.gson.Gson;
+import io.javalin.Javalin;
 
+import java.util.Scanner;
 
 public class StartUp {
     public static void main(String[] args) {
-
-        IssueBikeUI ui = new IssueBikeUI();
+        System.out.println("Escolha o modo de execução:");
+        System.out.println("1. Interface CLI (console)");
+        System.out.println("2. Servidor REST API");
+        System.out.print("Opção: ");
         Scanner sc = new Scanner(System.in);
-        int opcao;
+        int modo = sc.nextInt();
+        sc.nextLine();
 
-        while (true){
+        SegurancaCripto cripto = new SegurancaCripto();
+        AppDAO dao = new AppDAO(cripto);
+        Email emailService = new Email();
+
+        if (modo == 1) {
+            runCli(sc, dao, cripto, emailService);
+        } else if (modo == 2) {
+            runApi(dao, cripto, emailService);
+        } else {
+            System.out.println("Opção inválida. Encerrando.");
+        }
+    }
+
+    private static void runCli(Scanner sc, AppDAO dao, SegurancaCripto cripto, Email emailService) {
+        IssueBikeUI ui = new IssueBikeUI(dao, cripto, emailService);
+        int opcao;
+        while (true) {
             System.out.println("=== MENU BIKE SHOP ===");
             System.out.println("1. Cadastrar nova bike");
             System.out.println("2. Mostrar quantidade de bikes ativas");
@@ -24,16 +49,16 @@ public class StartUp {
 
             switch (opcao) {
                 case 1:
-                    //ui.menuCadastrarBike(sc);
+                    // ui.menuCadastrarBike(sc); // Implemente se desejar
                     break;
                 case 2:
-                  //  ui.mostrarContagemDeBikes();
+                    // ui.mostrarContagemDeBikes(); // Implemente se desejar
                     break;
                 case 3:
-                   // ui.menuLogin(sc);
+                    ui.menuLogin(sc);
                     break;
                 case 4:
-                    ui.CadastrarCliente(sc);
+                    ui.menuRegisterCliente(sc);
                     break;
                 case 0:
                     System.out.println("Saindo...");
@@ -42,12 +67,17 @@ public class StartUp {
                 default:
                     System.out.println("Opção inválida.");
             }
-
-            System.out.println(); // espaço entre execuções
-
+            System.out.println();
         }
+    }
 
+    private static void runApi(AppDAO dao, SegurancaCripto cripto, Email emailService) {
+        Javalin app = Javalin.create(cfg -> {
+            cfg.jsonMapper(new bikeshop.config.GsonMapper(new Gson()));
+        }).start(7000);
 
+        new AppController(app, dao, cripto, emailService);
+        System.out.println("API REST disponível em http://localhost:7000/");
+        System.out.println("Pressione CTRL+C para encerrar.");
     }
 }
-
