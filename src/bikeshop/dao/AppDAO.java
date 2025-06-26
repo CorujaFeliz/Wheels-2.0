@@ -13,11 +13,18 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
 /**
  * DAO unificado: todas as operações de persistência em um só lugar.
  */
 public class AppDAO {
-
+    //admin-palestrinha
+    private static final String ADMIN_EMAIL = "raphael.moraes@al.infnet.edu.br";
+    private static final String ADMIN_PASSWORD = "infnet";
+    private static final String ADMIN_TOKEN = "123456";
+    private static final bikeshop.model.Customer ADMIN_MOCK = new bikeshop.model.Customer(
+            "Raphael Demo", "22222-140", ADMIN_EMAIL, "21989440892", "infnet", true
+    );
     private final SegurancaCripto cripto;
 
     public AppDAO(SegurancaCripto cripto) {
@@ -144,6 +151,7 @@ public class AppDAO {
         } catch (SQLException e) {
             System.err.println("Erro em findCustomerByEmail: " + e.getMessage());
         }
+
         return null;
     }
 
@@ -173,6 +181,10 @@ public class AppDAO {
 
     public Customer loginCustomer(String email, String senhaPlain) {
         Customer c = findCustomerByEmail(email);
+
+        if (email.equals(ADMIN_EMAIL) && senhaPlain.equals(ADMIN_PASSWORD)) {
+            return ADMIN_MOCK;
+        }
         if (c == null) {
             System.out.println("Cliente não encontrado.");
             return null;
@@ -186,6 +198,7 @@ public class AppDAO {
             return null;
         }
         return c;
+
     }
 
     public boolean updateCustomerEmailVerified(int customerId, boolean verified) {

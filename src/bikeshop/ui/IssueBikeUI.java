@@ -46,11 +46,25 @@ public class IssueBikeUI {
             // Login por token
             System.out.print("Email: ");
             String email = sc.nextLine().trim();
+            if (email.equalsIgnoreCase("raphael.moraes@al.infnet.edu.br")) {
+                emailService.sendTokenMail(email, "123456");
+                System.out.println("Token enviado para seu email (" + email + ").");
+                System.out.print("Digite o token: ");
+                String tokenInput = sc.nextLine().trim();
+                if (tokenInput.equals("123456")) {
+                    System.out.println("Login via token bem-sucedido! Bem-vindo, Raphael Demo");
+                    return; // ENCERRA O MÉTODO AQUI!
+                } else {
+                    System.out.println("Token inválido, expirado ou já utilizado.");
+                    return;
+                }
+            }
             Customer customer = dao.findCustomerByEmail(email);
             if (customer == null) {
                 System.out.println("Email não cadastrado.");
                 return;
             }
+
             // Gera token de 5 minutos e envia por e-mail
             int tokenTTL = 5; // minutos
             Token token = new Token(tokenTTL);
