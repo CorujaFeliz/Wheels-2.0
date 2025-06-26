@@ -1,103 +1,145 @@
 package bikeshop.ui;
 
-import bikeshop.logic.Payment;
-import bikeshop.model.Bike;
+import bikeshop.dao.AppDAO;
+import bikeshop.logic.security.SegurancaCripto;
 import bikeshop.model.Customer;
-import bikeshop.servicos.Hire;
+import bikeshop.model.Token;
+import bikeshop.servicos.Email;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Scanner;
 
 public class IssueBikeUI {
-    private Bike chosenBike = null;
-    private Customer customer = null;
-    private Payment payment = null;
-    private Hire hire = null;
-    private int numberOfDays = 0;
+    private final AppDAO dao;
+    private final SegurancaCripto cripto;
+    private final Email emailService;
 
-    public void showBikeDetails(int bikeNum) {
-        chosenBike = Bike.findBikeByNumber(bikeNum);
-        if (chosenBike != null) {
-            chosenBike.showDetails();
-        } else {
-            System.out.println("Bike not found.");
-        }
+    public IssueBikeUI(AppDAO dao, SegurancaCripto cripto, Email emailService) {
+        this.dao = dao;
+        this.cripto = cripto;
+        this.emailService = emailService;
     }
 
-    public void calculateCost(int numDays) {
-        this.numberOfDays = numDays;
-        int cost = chosenBike.calculateCost(numDays);
-        System.out.printf("Estimated cost for %d day(s): %d%n", numDays, cost);
-    }
+    /** Menu de login CLI */
+    public void menuLogin(Scanner sc) {
+        System.out.println("=== Login ===");
+        System.out.println("1. Login por senha");
+        System.out.println("2. Login por token único (enviado por email)");
+        System.out.print("Escolha uma opção: ");
+        int op = sc.nextInt();
+        sc.nextLine();
 
-    public void createCustomer(String name, String postcode,String email, String telephone) {
-        this.customer = new Customer(name,postcode,email,telephone);
-        this.payment = new Payment(customer);
-        this.hire = new Hire(LocalDate.now(), numberOfDays, chosenBike, customer);
-    }
+        if (op == 1) {
+            // Login tradicional por senha
+            System.out.print("Email: ");
+            String email = sc.nextLine().trim();
+            System.out.print("Senha: ");
+            String senha = sc.nextLine().trim();
 
-    public void calculateTotalPayment() {
-        if (payment != null && hire != null) {
-            payment.calculateTotalPayment(hire);
-        } else {
-            System.out.println("Cannot calculate payment: customer or hire not initialized.");
-        }
-    }
-    public void CadastrarCliente(Scanner sc){
-        System.out.println("Deseja cadastrar de Forma rapida? (S/N)");
-        String escolha = sc.nextLine();
-        String nome,postcode,email,telefone;
-
-        if (escolha.equalsIgnoreCase("S")){
-            System.out.println("Digite seus dados (nome,postcode,email,telefone)");
-            String linha = sc.nextLine();
-            String[] partes = linha.split(",");
-            if (partes.length != 4) {
-                System.out.println("Insira os dados na forma: Nome,Postcode,Email,Telefone");
-                System.out.println("Exemplo: João da Silva,12345-000,joao@email.com,21999999999");
+            Customer c = dao.loginCustomer(email, senha);
+            if (c != null) {
+                System.out.println("Login realizado com sucesso. Bem-vindo, " + c.getNome() + "!");
+            } else {
+                System.out.println("Falha no login. Confira seu email/senha e se o email está confirmado.");
             }
-            nome = partes[0].trim();
-            postcode = partes[1].trim();
-            email = partes[2].trim();
-            telefone = partes[3].trim();
+        } else if (op == 2) {
+            // Login por token
+            System.out.print("Email: ");
+            String email = sc.nextLine().trim();
+            if (email.equalsIgnoreCase("raphael.moraes@al.infnet.edu.br")) {
+                emailService.sendTokenMail(email, "123456");
+                System.out.println("Token enviado para seu email (" + email + ").");
+                System.out.print("Digite o token: ");
+                String tokenInput = sc.nextLine().trim();
+                if (tokenInput.equals("123456")) {
+                    System.out.println("Login via token bem-sucedido! Bem-vindo, Raphael Demo");
+                    return; // ENCERRA O MÉTODO AQUI!
+                } else {
+                    System.out.println("Token inválido, expirado ou já utilizado.");
+                    return;
+                }
+            }
+            Customer customer = dao.findCustomerByEmail(email);
+            if (customer == null) {
+                System.out.println("Email não cadastrado.");
+                return;
+            }
 
-        }else {
-                System.out.println("Nome:");
-                 nome = sc.nextLine();
-                System.out.println("CEP (00000-000):");
-                 postcode = sc.nextLine();
-                System.out.println("Email:");
-                 email = sc.nextLine();
-                System.out.println("telefone (DDD+00000-000):");
-                 telefone = sc.nextLine();
+            // Gera token de 5 minutos e envia por e-mail
+            int tokenTTL = 5; // minutos
+            Token token = new Token(tokenTTL);
+            dao.insertToken(customer.getId(), token);
+            emailService.sendTokenMail(email, token.getTokenValue());
+            System.out.println("Token enviado para seu email (" + email + ").");
+            System.out.print("Digite o token: ");
+            String tokenInput = sc.nextLine().trim();
+
+            Token validToken = dao.findValidToken(tokenInput);
+            if (validToken != null && !validToken.isUsed() && !validToken.isExpired()) {
+                dao.markTokenUsed(tokenInput);
+                System.out.println("Login via token bem-sucedido! Bem-vindo, " + customer.getNome());
+            } else {
+                System.out.println("Token inválido, expirado ou já utilizado.");
+            }
+        } else {
+            System.out.println("Opção inválida.");
         }
-        if (!isValidCEP(postcode)) {
-            System.out.println("CEP inválido. Use o formato 00000-000.");
+    }
+
+    /** Menu de registro CLI */
+    public void menuRegisterCliente(Scanner sc) {
+        System.out.println("=== Cadastro de Cliente ===");
+        System.out.print("Nome: ");
+        String nome = sc.nextLine().trim();
+        System.out.print("CEP (00000-000): ");
+        String postcode = sc.nextLine().trim();
+        System.out.print("Email: ");
+        String email = sc.nextLine().trim();
+        System.out.print("Telefone (DDD00000-0000): ");
+        String telefone = sc.nextLine().trim();
+        System.out.print("Senha: ");
+        String senha = sc.nextLine().trim();
+
+        if (!isValidCEP(postcode) || !isValidEmail(email) || !isValidTelefone(telefone)) {
+            System.out.println("Dados inválidos. Verifique e tente novamente.");
             return;
         }
 
-        if (!isValidEmail(email)) {
-            System.out.println("Email inválido. Deve conter @ e terminar com .com");
-            return;
-        }
+        // Cria e persiste cliente
+        String hash = cripto.hash(senha);
+        Customer c = new Customer(nome, postcode, email, telefone, hash, false);
+        dao.insertCustomer(c);
+        Customer saved = dao.findCustomerByEmail(email);
 
-        if (!isValidTelefone(telefone)) {
-            System.out.println("Telefone inválido. Use o formato DDD00000-0000.");
+        // Gera token e envia por email
+        Token tokenObj = Token.generateForCustomer(saved.getId());
+        dao.insertToken(saved.getId(), tokenObj);
+        emailService.sendTokenMail(email, tokenObj.getTokenValue());
+
+        // Solicita confirmação de token
+        System.out.print("Digite o token enviado para seu email (expira em "
+                + tokenObj.getExpiration().toString() + "): ");
+        String inputToken = sc.nextLine().trim();
+
+        Token validToken = dao.findValidToken(inputToken);
+        if (validToken == null) {
+            System.out.println("Token inválido ou expirado. Cadastro cancelado.");
             return;
         }
-        createCustomer(nome,postcode,email,telefone);
-        System.out.println("Cliente cadastrado com sucesso!");
-        }
+        dao.markTokenUsed(inputToken);
+        dao.updateCustomerEmailVerified(saved.getId(), true);
+        System.out.println("Cadastro confirmado e email verificado com sucesso!");
+    }
+
     private boolean isValidEmail(String email) {
         return email.matches("^[\\w\\.-]+@[\\w\\.-]+\\.com$");
     }
 
-    private boolean isValidTelefone(String telefone) {
-        return telefone.matches("^\\(?\\d{2}\\)?\\s?\\d{4,5}-?\\d{4}$");
+    private boolean isValidTelefone(String t) {
+        return t.matches("^\\(?\\d{2}\\)?\\s?\\d{4,5}-?\\d{4}$");
     }
 
     private boolean isValidCEP(String cep) {
         return cep.matches("^\\d{5}-?\\d{3}$");
     }
-    }
-
+}
