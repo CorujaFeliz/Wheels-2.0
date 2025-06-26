@@ -22,16 +22,53 @@ public class IssueBikeUI {
 
     /** Menu de login CLI */
     public void menuLogin(Scanner sc) {
-        System.out.print("Email: ");
-        String email = sc.nextLine().trim();
-        System.out.print("Senha: ");
-        String senha = sc.nextLine().trim();
+        System.out.println("=== Login ===");
+        System.out.println("1. Login por senha");
+        System.out.println("2. Login por token único (enviado por email)");
+        System.out.print("Escolha uma opção: ");
+        int op = sc.nextInt();
+        sc.nextLine();
 
-        Customer c = dao.loginCustomer(email, senha);
-        if (c != null) {
-            System.out.println("Login realizado com sucesso. Bem-vindo, " + c.getNome() + "!");
+        if (op == 1) {
+            // Login tradicional por senha
+            System.out.print("Email: ");
+            String email = sc.nextLine().trim();
+            System.out.print("Senha: ");
+            String senha = sc.nextLine().trim();
+
+            Customer c = dao.loginCustomer(email, senha);
+            if (c != null) {
+                System.out.println("Login realizado com sucesso. Bem-vindo, " + c.getNome() + "!");
+            } else {
+                System.out.println("Falha no login. Confira seu email/senha e se o email está confirmado.");
+            }
+        } else if (op == 2) {
+            // Login por token
+            System.out.print("Email: ");
+            String email = sc.nextLine().trim();
+            Customer customer = dao.findCustomerByEmail(email);
+            if (customer == null) {
+                System.out.println("Email não cadastrado.");
+                return;
+            }
+            // Gera token de 5 minutos e envia por e-mail
+            int tokenTTL = 5; // minutos
+            Token token = new Token(tokenTTL);
+            dao.insertToken(customer.getId(), token);
+            emailService.sendTokenMail(email, token.getTokenValue());
+            System.out.println("Token enviado para seu email (" + email + ").");
+            System.out.print("Digite o token: ");
+            String tokenInput = sc.nextLine().trim();
+
+            Token validToken = dao.findValidToken(tokenInput);
+            if (validToken != null && !validToken.isUsed() && !validToken.isExpired()) {
+                dao.markTokenUsed(tokenInput);
+                System.out.println("Login via token bem-sucedido! Bem-vindo, " + customer.getNome());
+            } else {
+                System.out.println("Token inválido, expirado ou já utilizado.");
+            }
         } else {
-            System.out.println("Falha no login. Confira seu email/senha e se o email está confirmado.");
+            System.out.println("Opção inválida.");
         }
     }
 

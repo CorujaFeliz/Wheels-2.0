@@ -108,7 +108,7 @@ public class AppDAO {
     // ------- CUSTOMER -------
 
     public void insertCustomer(Customer customer) {
-        String sql = "INSERT INTO customers (nome, postcode, email, telefone, senha, email_verificado) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO customer (nome, postcode, email, telefone, senha, email_verificado) VALUES (?, ?, ?, ?, ?, ?)";
         try (var conn = DataConnection.getConnection();
              var stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, customer.getNome());
@@ -124,7 +124,7 @@ public class AppDAO {
     }
 
     public Customer findCustomerByEmail(String email) {
-        String sql = "SELECT id, nome, postcode, email, telefone, senha, email_verificado FROM customers WHERE email = ?";
+        String sql = "SELECT id, nome, postcode, email, telefone, senha, email_verificado FROM customer WHERE email = ?";
         try (var conn = DataConnection.getConnection();
              var stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, email);
@@ -148,7 +148,7 @@ public class AppDAO {
     }
 
     public Customer findCustomerById(int id) {
-        String sql = "SELECT id, nome, postcode, email, telefone, senha, email_verificado FROM customers WHERE id = ?";
+        String sql = "SELECT id, nome, postcode, email, telefone, senha, email_verificado FROM customer WHERE id = ?";
         try (var conn = DataConnection.getConnection();
              var stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
@@ -189,7 +189,7 @@ public class AppDAO {
     }
 
     public boolean updateCustomerEmailVerified(int customerId, boolean verified) {
-        String sql = "UPDATE customers SET email_verificado = ? WHERE id = ?";
+        String sql = "UPDATE customer SET email_verificado = ? WHERE id = ?";
         try (var conn = DataConnection.getConnection();
              var stmt = conn.prepareStatement(sql)) {
             stmt.setBoolean(1, verified);

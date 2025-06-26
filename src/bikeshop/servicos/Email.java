@@ -23,7 +23,7 @@ public class Email {
         String host = "smtp.gmail.com";
         String port = "587";
         String user = "noreplyfaculdade@gmail.com";
-        String pass = "JAJARBINKS#1";
+        String pass = "zykw mexi tfye xqlg";
         this.from   = "Bike Shop <noreplyfaculdade@gmail.com>";
 
         Properties props = new Properties();
