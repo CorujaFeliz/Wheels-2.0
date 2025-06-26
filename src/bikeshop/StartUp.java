@@ -49,10 +49,10 @@ public class StartUp {
 
             switch (opcao) {
                 case 1:
-                    // ui.menuCadastrarBike(sc); // Implemente se desejar
+                    // ui.menuCadastrarBike(sc); // Implemente futuramente
                     break;
                 case 2:
-                    // ui.mostrarContagemDeBikes(); // Implemente se desejar
+                    // ui.mostrarContagemDeBikes(); // Implementar futuramente
                     break;
                 case 3:
                     ui.menuLogin(sc);

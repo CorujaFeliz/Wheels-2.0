@@ -118,12 +118,14 @@ public class AppDAO {
         String sql = "INSERT INTO customer (nome, postcode, email, telefone, senha, email_verificado) VALUES (?, ?, ?, ?, ?, ?)";
         try (var conn = DataConnection.getConnection();
              var stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, customer.getNome());
-            stmt.setString(2, customer.getPostcode());
-            stmt.setString(3, customer.getEmail());
-            stmt.setString(4, customer.getTelefone());
-            stmt.setString(5, customer.getSenhaHash());
+
+            stmt.setString(1, SegurancaCripto.criptografar(customer.getNome()));
+            stmt.setString(2, SegurancaCripto.criptografar(customer.getPostcode()));
+            stmt.setString(3, SegurancaCripto.criptografar(customer.getEmail()));
+            stmt.setString(4, SegurancaCripto.criptografar(customer.getTelefone()));
+            stmt.setString(5, customer.getSenhaHash()); // Hash já aplicado no controller
             stmt.setBoolean(6, customer.isEmailVerificado());
+
             stmt.executeUpdate();
         } catch (SQLException e) {
             System.err.println("Erro ao inserir cliente: " + e.getMessage());
@@ -134,15 +136,16 @@ public class AppDAO {
         String sql = "SELECT id, nome, postcode, email, telefone, senha, email_verificado FROM customer WHERE email = ?";
         try (var conn = DataConnection.getConnection();
              var stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, email);
+            // Pesquisando pelo email CRIPTOGRAFADO!
+            stmt.setString(1, SegurancaCripto.criptografar(email));
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return new Customer(
                             rs.getInt("id"),
-                            rs.getString("nome"),
-                            rs.getString("postcode"),
-                            rs.getString("email"),
-                            rs.getString("telefone"),
+                            SegurancaCripto.descriptografar(rs.getString("nome")),
+                            SegurancaCripto.descriptografar(rs.getString("postcode")),
+                            SegurancaCripto.descriptografar(rs.getString("email")),
+                            SegurancaCripto.descriptografar(rs.getString("telefone")),
                             rs.getString("senha"),
                             rs.getBoolean("email_verificado")
                     );
@@ -151,7 +154,6 @@ public class AppDAO {
         } catch (SQLException e) {
             System.err.println("Erro em findCustomerByEmail: " + e.getMessage());
         }
-
         return null;
     }
 
@@ -164,10 +166,10 @@ public class AppDAO {
                 if (rs.next()) {
                     return new Customer(
                             rs.getInt("id"),
-                            rs.getString("nome"),
-                            rs.getString("postcode"),
-                            rs.getString("email"),
-                            rs.getString("telefone"),
+                            SegurancaCripto.descriptografar(rs.getString("nome")),
+                            SegurancaCripto.descriptografar(rs.getString("postcode")),
+                            SegurancaCripto.descriptografar(rs.getString("email")),
+                            SegurancaCripto.descriptografar(rs.getString("telefone")),
                             rs.getString("senha"),
                             rs.getBoolean("email_verificado")
                     );
@@ -198,7 +200,6 @@ public class AppDAO {
             return null;
         }
         return c;
-
     }
 
     public boolean updateCustomerEmailVerified(int customerId, boolean verified) {
@@ -212,6 +213,21 @@ public class AppDAO {
             System.err.println("Erro em updateCustomerEmailVerified: " + e.getMessage());
         }
         return false;
+    }
+    public boolean deleteCliente(int id) {
+        String sql = "DELETE FROM customers WHERE customer_id = ?";
+
+        try (Connection conn = DataConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     // ------- HIRE / RENTAL -------

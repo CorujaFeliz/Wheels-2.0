@@ -53,7 +53,7 @@ public class IssueBikeUI {
                 String tokenInput = sc.nextLine().trim();
                 if (tokenInput.equals("123456")) {
                     System.out.println("Login via token bem-sucedido! Bem-vindo, Raphael Demo");
-                    return; // ENCERRA O MÉTODO AQUI!
+                    return; 
                 } else {
                     System.out.println("Token inválido, expirado ou já utilizado.");
                     return;
