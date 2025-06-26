@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class AppDAO {
     //admin-palestrinha
-    private static final String ADMIN_EMAIL = "raphael.moraes@al.infnet.edu.br";
+    private static final String ADMIN_EMAIL = "Email aqui";
     private static final String ADMIN_PASSWORD = "infnet";
     private static final String ADMIN_TOKEN = "123456";
     private static final bikeshop.model.Customer ADMIN_MOCK = new bikeshop.model.Customer(
